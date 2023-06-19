@@ -66,14 +66,14 @@ module.exports = {
             const tempCompile = await handlebars.compile(data);
             const tempResult = tempCompile({
               email: email,
-              link: `testing ajaa`,
+              link: `http://localhost:3000/activation?token=${token}`,
             });
-            // await transporter.sendMail({
-                //     from: 'Admin',
-                //     to: "mnaufal98@gmail.com",
-                //     subject: 'Activation acuscount',
-                //     html: tempResult
-                // })
+            await transporter.sendMail({
+                    from: 'Admin',
+                    to: "mnaufal98@gmail.com",
+                    subject: 'Activation acuscount',
+                    html: tempResult
+                })
                 
         return res.status(200).send({
           success: true,
@@ -185,8 +185,8 @@ module.exports = {
   editUser: async (req, res) => {
     try {
       const { userName, fullName, bio, id } = req.body
-      const file = req.file
-      console.log(id, "iniiiii idddddddddddd")
+      let file = req.file
+      console.log(file, "ini fileeeeeejfbeajkbfkjeab")
 
       const checkUserName = await User.findOne({
         where: {
@@ -219,11 +219,12 @@ module.exports = {
           data: null,
         });
       } else {
+        console.log("masukkk")
         const result = await User.update({
           userName: userName ? userName : checkUser.userName,
           fullName: fullName ? fullName : checkUser.fullName,
           bio: bio ? bio : checkUser.bio,
-          profileImage: file.filename ? file.filename : checkUser.profileImage
+          profileImage: file?.filename ? file?.filename : checkUser.profileImage
         }, {
           where: {
             id: id
@@ -244,6 +245,40 @@ module.exports = {
       }
       
 
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        message: error.message,
+        data: null,
+    });
+    }
+  },
+  activation: async (req, res) => {
+    try {
+      const { token } = req.body
+      const id = req.user.id
+      
+      const result = await User.update({
+        isStatus: true
+      }, {
+        where: {
+          id: id
+        }
+      })
+
+      if (result) {
+        return res.status(201).send({
+          success: true,
+          message: "Activation success!",
+          data: resultUpdate,
+        })
+      } else {
+        return res.status(400).send({
+          success: false,
+          message: "failed!",
+          data: null,
+        })
+      }
     } catch (error) {
       res.status(500).send({
         success: false,
